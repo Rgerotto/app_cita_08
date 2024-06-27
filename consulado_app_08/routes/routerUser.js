@@ -319,12 +319,39 @@ routerUser.get('/calendario', verifyToken, (req, res) => {
             }
 
             const user = result[0];
-            console.log("Usuario encontrado:", user);
+            //console.log("Usuario encontrado:", user);
 
             res.render('calendarioAuto', { user, span: user.nombre_res, button: 'Mensajes', mensaje: user.alerta, citas: citasResult || [] });
         });
     });
 });
+
+
+routerUser.post('/reserve_cita', (req, res) => {
+    //const userId = req.params.id;
+    const { userId, date, hour, firstName, surname } = req.body;
+    //console.log("uesrId", userId, date, hour, firstName, surname)
+    //const { date, hour } = req.body;
+    const working = `${date} ${hour}`;
+    const insert = "INSERT INTO cita_urgente(id_residente, nombre_res, apellido_res, fecha_cita_urgente, tipo_documento) VALUES(?,?,?,?,?)";
+
+    connection.query(insert, [userId, firstName, surname, working, "DNI"], (error, citasResult) => {
+        if (error) {
+            console.error('Erro ao inserir dados:', error);
+            res.status(500).json({ message: 'Erro ao reservar a cita' });
+            return;
+        }
+
+        console.log("Dados inseridos:", citasResult);
+        res.render('reservationConfirmation', { firstName, surname, date, hour });
+        //res.json(`${firstName} ${surname}, la cita estas reservada para el ${date} a las ${hour}`);
+    });
+});
+
+routerUser.get('/confirmation', (req, res) => {
+
+    res.render('./reservationConfirmation')
+})
 
 
 // RUTA PARA CERRAR SESIÓN
